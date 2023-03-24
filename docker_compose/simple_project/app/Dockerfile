@@ -9,19 +9,21 @@ ENV UWSGI_THREADS 16
 ENV UWSGI_HARAKIRI 240
 ENV DJANGO_SETTINGS_MODULE 'example.settings'
 
-COPY run_uwsgi.sh run_uwsgi.sh
 COPY requirements.txt requirements.txt
-COPY uwsgi/uwsgi.ini uwsgi.ini
 
-RUN  mkdir -p /var/www/static/ \
-     && mkdir -p /var/www/media/ \
-     && mkdir -p /opt/app/static/ \
+RUN  mkdir -p /opt/app/static/ \
      && mkdir -p /opt/app/media/ \
      && pip install --upgrade pip \
      && pip install -r requirements.txt
 
-COPY . .
+COPY . ./
 
-EXPOSE 8000
+RUN addgroup --gid 1001 --system app \
+    && adduser --no-create-home \
+    --shell /bin/false --disabled-password \
+    --uid 1001 --system --group app \
+    && chown -R app:app /opt/app
 
-ENTRYPOINT ["uwsgi", "--strict", "--ini", "uwsgi.ini"]
+USER app
+
+ENTRYPOINT ["sh", "run_uwsgi.sh"]

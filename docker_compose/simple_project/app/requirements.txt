@@ -1,2 +1,4 @@
-django==4.0.4
+django==4.1.7
 uwsgi==2.0.20
+psycopg2-binary==2.9.5
+python-dotenv==1.0.0
