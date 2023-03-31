@@ -32,7 +32,7 @@ services:
     volumes:
       - postgres_volume:/var/lib/postgresql/data/
     env_file:
-      - ./.env
+      - .env
     restart: always
 
 volumes:
