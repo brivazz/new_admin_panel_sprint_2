@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.generic.list import BaseListView
 from django.views.generic.detail import BaseDetailView
 from django.contrib.postgres.expressions import ArraySubquery
-from django.db.models import OuterRef
+from django.db.models import OuterRef, Subquery
 
 from movies.models import Filmwork, PersonFilmwork
 
@@ -14,23 +14,33 @@ class MoviesApiMixin:
     paginate_by = 50
 
     def get_queryset(self, pk=None):
-        actors = PersonFilmwork.objects.select_related(
-            'person'
-            ).filter(
-            film_work_id=OuterRef('pk')
-        ).filter(role='actor').values('person__full_name')
 
-        directors = PersonFilmwork.objects.select_related(
+        actors = Subquery(
+            PersonFilmwork.objects.select_related(
             'person'
             ).filter(
-            film_work_id=OuterRef('pk')
-        ).filter(role='director').values('person__full_name')
+                film_work=OuterRef('pk'),
+                role=PersonFilmwork.RoleInFilm.ACTOR
+            ).values('person__full_name')
+        )
 
-        writers = PersonFilmwork.objects.select_related(
+        directors = Subquery(
+            PersonFilmwork.objects.select_related(
             'person'
             ).filter(
-            film_work_id=OuterRef('pk')
-        ).filter(role='writer').values('person__full_name')
+                film_work=OuterRef('pk'),
+                role=PersonFilmwork.RoleInFilm.DIRECTOR
+            ).values('person__full_name')
+        )
+
+        writers = Subquery(
+            PersonFilmwork.objects.select_related(
+            'person'
+            ).filter(
+                film_work=OuterRef('pk'),
+                role=PersonFilmwork.RoleInFilm.WRITER
+            ).values('person__full_name')
+        )
 
         queryset = Filmwork.objects.prefetch_related(
             'genres', 'persons'
@@ -65,7 +75,7 @@ class MoviesApiMixin:
 
         return queryset
 
-    def render_to_response(self, *args):
+    def render_to_response(self, *args, **kwargs):
         return JsonResponse(self.get_context_data())
 
 

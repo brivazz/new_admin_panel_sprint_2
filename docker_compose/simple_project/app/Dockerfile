@@ -11,10 +11,12 @@ ENV DJANGO_SETTINGS_MODULE 'example.settings'
 
 COPY requirements.txt requirements.txt
 
-RUN  mkdir -p /opt/app/static/ \
+RUN  apt update -y \
+     && apt install -y netcat-openbsd \
+     && mkdir -p /opt/app/static/ \
      && mkdir -p /opt/app/media/ \
      && pip install --upgrade pip \
-     && pip install -r requirements.txt
+     && pip install -r requirements.txt --no-cache-dir
 
 COPY . ./
 
